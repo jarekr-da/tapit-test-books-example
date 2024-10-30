@@ -9,9 +9,13 @@ import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
-
+import TapirConf._
 object Endpoints {
   implicit val ec  = ExecutionContext.global
+  implicit val ats = Schema.derived[AuthorType]
+  implicit val as = Schema.derived[Author]
+  implicit val bs = Schema.derived[Book]
+
   case class User(name: String) extends AnyVal
   val helloEndpoint: PublicEndpoint[User, Unit, String, Any] = endpoint.get
     .in("hello")
@@ -41,6 +45,7 @@ object Endpoints {
 }
 
 object Library {
+
   case class Author(author: AuthorType)
 
   sealed trait AuthorType
@@ -56,3 +61,4 @@ object Library {
     Book("Pharaoh", 1897, Author(Human("Boleslaw Prus")))
   )
 }
+
