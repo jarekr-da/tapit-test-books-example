@@ -2,26 +2,40 @@ package com.da.experiment
 
 import sttp.tapir._
 import Library._
-import io.circe.generic.extras.auto._
 
 import scala.concurrent.{ExecutionContext, Future}
 import sttp.tapir.generic.auto._
-import io.circe.generic.extras.{Configuration => CirceConfiguration}
+//import io.circe.generic.extras.{Configuration => CirceConfiguration}
 import sttp.tapir.json.circe._
+import io.circe.{ Decoder, Encoder }, io.circe.generic.auto._
+import io.circe.syntax._
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
+import cats.syntax.functor._
 object Endpoints {
-  implicit lazy val customTapirSchemaConfig: sttp.tapir.generic.Configuration =
-    sttp.tapir.generic.Configuration.default
-        .withDiscriminator("type_discriminator")
-
-  implicit lazy val circeConfig = CirceConfiguration.default.withDiscriminator("type_discriminator")
+//  implicit lazy val customTapirSchemaConfig: sttp.tapir.generic.Configuration =
+//    sttp.tapir.generic.Configuration.default
+//        .withFullDiscriminatorValues
+//
+//  implicit lazy val circeConfig = CirceConfiguration.default
 
   implicit val ec  = ExecutionContext.global
-  implicit val ats = Schema.derived[AuthorType]
-  implicit val as = Schema.derived[Author]
-  implicit val bs = Schema.derived[Book]
+//  implicit val ats = Schema.derived[AuthorType]
+//  implicit val as = Schema.derived[Author]
+//  implicit val bs = Schema.derived[Book]
+
+  implicit val encodeAuthorType: Encoder[AuthorType] = Encoder.instance {
+    case human: Human => human.asJson
+    case ai: AI => ai.asJson
+  }
+
+  implicit val decodeAuthorType: Decoder[AuthorType] =
+    List[Decoder[AuthorType]](
+      Decoder[Human].widen,
+      Decoder[AI].widen,
+    ).reduceLeft(_ or _)
+
 
   case class User(name: String) extends AnyVal
   val helloEndpoint: PublicEndpoint[User, Unit, String, Any] = endpoint.get
@@ -56,8 +70,8 @@ object Library {
   case class Author(author: AuthorType)
 
   sealed trait AuthorType
-  case class Human(name: String) extends AuthorType
-  case class AI(name: String) extends AuthorType
+  case class Human(human_name: String) extends AuthorType
+  case class AI(ai_name: String) extends AuthorType
 
   case class Book(title: String, year: Int, author: Author)
 
