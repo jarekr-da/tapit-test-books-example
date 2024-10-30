@@ -2,15 +2,22 @@ package com.da.experiment
 
 import sttp.tapir._
 import Library._
-import io.circe.generic.auto._
+import io.circe.generic.extras.auto._
 
 import scala.concurrent.{ExecutionContext, Future}
 import sttp.tapir.generic.auto._
+import io.circe.generic.extras.{Configuration => CirceConfiguration}
 import sttp.tapir.json.circe._
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
-import TapirConf._
+
 object Endpoints {
+  implicit lazy val customTapirSchemaConfig: sttp.tapir.generic.Configuration =
+    sttp.tapir.generic.Configuration.default
+        .withDiscriminator("type_discriminator")
+
+  implicit lazy val circeConfig = CirceConfiguration.default.withDiscriminator("type_discriminator")
+
   implicit val ec  = ExecutionContext.global
   implicit val ats = Schema.derived[AuthorType]
   implicit val as = Schema.derived[Author]
